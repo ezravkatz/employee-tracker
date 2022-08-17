@@ -1,3 +1,12 @@
+
+ INSERT INTO department (id, name)
+VALUES
+  (1, 'Furniture'),
+  (2, 'Clothing'),
+  (3, 'Produce'),
+  (4, 'Electronics'),
+  (5, 'Deli');
+  
   INSERT INTO roles (id, title, salary, department_id)
 VALUES
   (101, 'Salesperson', 20.000, 1),
@@ -17,11 +26,3 @@ VALUES
   (501, 'Butcher', 33.000, 5),
   (502, 'Butcher', 35.000, 5),
   (503, 'Cashier', 15.500, 5);
-
- INSERT INTO department (id, name)
-VALUES
-  (1, 'Furniture'),
-  (2, 'Clothing'),
-  (3, 'Produce'),
-  (4, 'Electronics'),
-  (5, 'Deli');
