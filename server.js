@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 const inquirer = require("inquirer");
 const Connection = require('mysql2/typings/mysql/lib/Connection');
 const e = require('express');
+const { query } = require('express');
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -215,4 +216,138 @@ inquirer.prompt([
 })
 }
 
+const addEmployee = () => {
+  return.db.promise().query(
+    `SELECT roles.id, roles.title FROM roels`
+  )
+  .then(([roles]) => {
+    let roleOptions = roles.map(({
+      id,
+      title
+    }) => ({
+      name: title,
+      value: id
+    }))
+
+    db.promise()query(
+      `SELECT E.id CONCAT (first_name, ' ', last_name) AS manager FROM emplyee E`
+    )
+    .then(([manager]) => {
+      let managerOptions = manager.map(({
+        id,
+        manager
+      }) => ({
+        name: manager,
+        value: id
+      }))
+
+      inquirer.prompt([
+        {
+          type: 'input',
+          name: 'firstName',
+          message: 'Please enter the first name of the employee you wish to add.',
+          validate: answer => {
+            if (answer) {
+              return true;
+            }
+            console.log("Error! Please provide a valid first name.")
+          }
+        },
+        {
+          type: 'input',
+          name: 'lastName',
+          message: 'Please enter the last name of the employee you wish to add.',
+          validate: answer => {
+            if (answer) {
+              return true;
+            }
+            console.log("Error! Please provide a valid last name.")
+        }
+      },
+      {
+        type: 'input',
+        name: 'roleTitle',
+        message: 'Please enter the role of the employee you wish to add.',
+        choices: roleOptions
+      },
+      {
+        type: 'input',
+        name: 'roleTitle',
+        message: 'Please enter new employee manager ID.',
+        choices: managerOptions
+      }
+      ])
+      .then(({firstName, lastName, roleTitle, manager}) => {
+        db.promise().query(
+          `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+          VALUES (?, ?, ?, ?)`,
+          [firstName, lastName, roleTitle, manager],
+          (err, result) => {
+            if.(err) {
+              console.log(err)
+            }
+          }
+        )
+        console.log(`New employee successfully added!`);
+        promptOne();
+      })
+    })
+  })
+}
+
+const updateEmployeeRole = () => {
+  return db.promise().query(
+    `SELECT E.id, CONCAT(E.first_name, ' ', last_name) AS employee FROM employee E`
+  )
+  .then(([employee]) => {
+    let allEmployees = employee.map(({
+      id,
+      employee
+    }) => ({
+      value: id,
+      name: employee
+    }))
+    db.promise().query(
+      `SELECT roles.id, roles.title FROM roles`
+    )
+    .then(([roles]) => {
+      let allRoles = roles.map(({
+        id,
+        title
+      }) => ({
+        value: id,
+        name: title
+      }))
+
+      inquirer.prompt([
+        {
+        type: 'list',
+        name: 'employeelist'
+        message: 'Please select which employee to update.',
+         choices: allEmployees
+        },
+        {
+          type: 'list',
+          name: 'newrole',
+         message: 'Please select which new role to assign the employee.',
+         choices: allRoles
+        }
+      ])
+      .then(({employee, updateEmployeeRole}) => {
+        db.promise().query(
+          `UPDATE employee SET role_id = ?
+          WHERE id = ?`,
+          [updateEmployeeRole, employee],
+          (err, result) => {
+            if (err) {
+              console.log(err)
+            }
+            console.log('The employee role has been changed successfully.');
+            promptOne();
+          }
+        )
+      })
+    })
+  })
+}
 
