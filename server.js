@@ -123,94 +123,96 @@ function viewEmployees() {
   })
 }
 
-// GET all departments
-app.get('/api/department', (req, res) => {
-  const sql = `SELECT * FROM department`;
-
-  db.query(sql, (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+const newDepartment = () => {
+  return inquirer.prompt([
+    {
+      type: 'input',
+      name: 'department',
+      message: 'What is the department name which you would like to add?',
+      validate: answer => {
+        if (answer) {
+          return true;
+        }
+        console.log("Error! Please provide the department name.");
+        return false;
+      }
     }
-    res.json({
-      message: 'success',
-      data: rows
-    });
-  });
-});
+  ])
+  .then(input => {
+    const dept = `INSERT INTO department (name) VALUES(?)`;
+    const param = [input.department];
 
-// GET a single department
-app.get('/api/department/:id', (req, res) => {
-  const sql = `SELECT * FROM department WHERE id = ?`;
-  const params = [req.params.id];
+    db.query(dept, param, (err, result) => {
+      if (err){
+        console.log(err);
+      }
+      console.log(`${input.department} added!`)
+      promptOne();
+    })
+  })
+}
 
-  db.query(sql, params, (err, row) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
+const addRole = () => {
+  return db.promise().query(
+    `SELECT department.id, department.name FROM department`
+  )
+  .then(([department]) => {
+    let deptOptions = departments.map(({
+      id,
+      name
+    }) => ({
+      name: name,
+      value: id
+    }))
+  })
+}
+
+inquirer.prompt([
+  {
+    type: 'input',
+    name: 'role',
+    message: 'Please enter the role you want to add.',
+    validate: answer => {
+      if (answer) {
+        return true;
+      }
+      console.log("Error! Please enter a valid role name.");
+      return false;
     }
-    res.json({
-      message: 'success',
-      data: row
-    });
-  });
-});
-
-// delete a department
-app.delete('/api/department/:id', (req, res) => {
-  const sql = `DELETE FROM department WHERE id = ?`;
-  const params = [req.params.id];
-
-  db.query(sql, params, (err, result) => {
-    if (err) {
-      res.statusMessage(400).json({ error: res.message });
-    } else if (!result.affectedRows) {
-      res.json({
-        message: 'Department not found'
-      });
-    } else {
-      res.json({
-        message: 'deleted',
-        changes: result.affectedRows,
-        id: req.params.id
-      });
+  },
+  {
+    type: 'list',
+    name: 'department',
+    message: 'In which department should this role be assigned?',
+    choices: deptOptions
+  },
+  {
+    type: 'input',
+    name: 'salary',
+    message: 'Please enter the salary for this role.',
+    validate: answer => {
+      if (answer) {
+        return true;
+      }
+      console.log("Error! Please enter the salary for this role.");
+      return false;
     }
-  });
-});
-
-// create a department
-app.post('/api/department', ({ body }, res) => {
-  const errors = inputCheck(
-    body,
-    'id',
-    'name',
-  );
-  if (errors) {
-    res.status(400).json({ error: errors });
-    return;
   }
-
-  const sql = `INSERT INTO department (id, name)
-    VALUES (?,?,?)`;
-  const params = [body.id, body.name];
-
-  db.query(sql, params, (err, result) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
+])
+.then(({role, department, salary}) => {
+  db.promise().query(
+    `INSERT INTO roles (title, salary, department_id)
+    VALUES (?, ?, ?)`,
+    [role, salary, department],
+    (err, result) => {
+      if (err) {
+        console.log(err)
+      }
     }
-    res.json({
-      message: 'success',
-      data: body
-    });
-  });
-});
+  )
+  console.log("Role added successfully.")
+  promptOne();
+})
+}
 
-// error message for any other request 
-app.use((req, res) => {
-  res.status(404).end();
-});
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
